@@ -62,7 +62,7 @@ public class SignUpFragment extends Fragment {
                 etVerifyPassword.setError("Passwords do not match");
                 return;
             }
-
+            btnSignUp.setBackgroundColor(getResources().getColor(R.color.grey));
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
@@ -70,6 +70,7 @@ public class SignUpFragment extends Fragment {
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        btnSignUp.setBackgroundColor(getResources().getColor(R.color.darkGrey));
                         return;
                     });
         });

@@ -59,6 +59,7 @@ public class ProfileFragment extends Fragment {
         });
 
         btnLogout.setOnClickListener(v -> {
+            btnLogout.setBackgroundColor(getResources().getColor(R.color.grey));
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(getActivity(), LoginActivity.class));
             requireActivity().finish();

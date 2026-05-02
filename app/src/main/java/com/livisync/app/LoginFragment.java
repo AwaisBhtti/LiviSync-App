@@ -46,12 +46,15 @@ public class LoginFragment extends Fragment {
                 Toast.makeText(getContext(), "Please fill out all fields.", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            btnLogin.setBackgroundColor(getResources().getColor(R.color.grey));
             mAuth.signInWithEmailAndPassword(inputEmail, inputPassword).addOnSuccessListener(authResult -> {
                 startActivity(new Intent(getActivity(), MainActivity.class));
                 requireActivity().finish();
             })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Login failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        btnLogin.setBackgroundColor(getResources().getColor(R.color.darkGrey));
                     });
         });
     }
