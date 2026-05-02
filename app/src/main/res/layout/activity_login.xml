@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
@@ -13,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="80dp"
-        android:text="Get Started"
+        android:text="@string/get_started"
         android:textColor="@color/white"
         android:textSize="32sp"
         android:textStyle="bold" />
@@ -25,7 +24,7 @@
         android:layout_below="@id/txtGetStarted"
         android:layout_marginStart="24dp"
         android:layout_marginTop="10dp"
-        android:text="Create an account or log in to continue"
+        android:text="@string/create_an_account_or_log_in_to_continue"
         android:textColor="@color/grey"
         android:textSize="14sp" />
 

@@ -15,4 +15,11 @@
     <string name="profile_pets_placeholder">Pets: -</string>
     <string name="profile_edit_button">Edit Profile</string>
     <string name="profile_logout_button">Logout</string>
+    <string name="slogan">Your Ideal Roommate, Simplified</string>
+    <string name="get_started">Get Started</string>
+    <string name="create_an_account_or_log_in_to_continue">Create an account or log in to continue</string>
+    <string name="find_your_best_roommate">Find Your Best Roommate</string>
+    <string name="top_match">Top Match</string>
+    <string name="_0">0%</string>
+    <string name="pending">Pending</string>
 </resources>

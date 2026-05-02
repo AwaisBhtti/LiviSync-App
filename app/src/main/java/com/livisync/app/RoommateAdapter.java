@@ -45,7 +45,10 @@ public class RoommateAdapter extends RecyclerView.Adapter<RoommateAdapter.ViewHo
         String details = item.getCity() + " • " + item.getBudgetRange() + " • " + item.getSleep();
         holder.tvDetails.setText(details);
 
-        holder.btnSend.setOnClickListener(v -> listener.onSendRequest(item));
+        holder.btnSend.setOnClickListener(v -> {
+            listener.onSendRequest(item);
+            holder.btnSend.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.grey));
+        });
         holder.btnView.setOnClickListener(v -> listener.onViewProfile(item));
     }
 
