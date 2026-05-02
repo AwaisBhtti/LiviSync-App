@@ -27,8 +27,6 @@
         <activity android:name=".LoginActivity" />
         <activity android:name=".ChatActivity" />
         <activity android:name=".MainActivity" />
-        <activity android:name=".ProfileSetupActivity" />
-        <activity android:name=".PreferencesActivity" />
         <activity android:name=".EditProfileActivity" />
         <activity android:name=".ViewProfileActivity" />
     </application>

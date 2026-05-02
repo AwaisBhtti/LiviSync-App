@@ -6,11 +6,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -26,7 +26,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
     EditText etName, etAge, etBio, etBudgetMin, etBudgetMax, etCity;
     Spinner spGender, spSleep, spCleanliness;
-    Switch swSmoking, swPets, swGuests;
+    SwitchMaterial swSmoking, swPets, swGuests;
     Button btnSaveChanges;
     FirebaseFirestore db;
     String uid;
@@ -74,6 +74,8 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     private void loadCurrentData() {
+        if (uid == null) return;
+
         // Load user data and prefill fields
         db.collection("users").document(uid)
                 .get()
@@ -85,10 +87,12 @@ public class EditProfileActivity extends AppCompatActivity {
 
                         // Set gender spinner to current value
                         String gender = doc.getString("gender");
-                        for (int i = 0; i < genderOptions.length; i++) {
-                            if (genderOptions[i].equals(gender)) {
-                                spGender.setSelection(i);
-                                break;
+                        if (gender != null) {
+                            for (int i = 0; i < genderOptions.length; i++) {
+                                if (genderOptions[i].equals(gender)) {
+                                    spGender.setSelection(i);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -112,10 +116,12 @@ public class EditProfileActivity extends AppCompatActivity {
 
                         // Set sleep spinner
                         String sleep = doc.getString("sleepSchedule");
-                        for (int i = 0; i < sleepOptions.length; i++) {
-                            if (sleepOptions[i].equals(sleep)) {
-                                spSleep.setSelection(i);
-                                break;
+                        if (sleep != null) {
+                            for (int i = 0; i < sleepOptions.length; i++) {
+                                if (sleepOptions[i].equals(sleep)) {
+                                    spSleep.setSelection(i);
+                                    break;
+                                }
                             }
                         }
 
@@ -139,11 +145,26 @@ public class EditProfileActivity extends AppCompatActivity {
         String budgetMin = etBudgetMin.getText().toString().trim();
         String budgetMax = etBudgetMax.getText().toString().trim();
 
-        if (name.isEmpty()) { etName.setError("Required"); return; }
-        if (age.isEmpty()) { etAge.setError("Required"); return; }
-        if (city.isEmpty()) { etCity.setError("Required"); return; }
-        if (budgetMin.isEmpty()) { etBudgetMin.setError("Required"); return; }
-        if (budgetMax.isEmpty()) { etBudgetMax.setError("Required"); return; }
+        if (name.isEmpty()) {
+            etName.setError("Required");
+            return;
+        }
+        if (age.isEmpty()) {
+            etAge.setError("Required");
+            return;
+        }
+        if (city.isEmpty()) {
+            etCity.setError("Required");
+            return;
+        }
+        if (budgetMin.isEmpty()) {
+            etBudgetMin.setError("Required");
+            return;
+        }
+        if (budgetMax.isEmpty()) {
+            etBudgetMax.setError("Required");
+            return;
+        }
 
         int parsedBudgetMin;
         int parsedBudgetMax;

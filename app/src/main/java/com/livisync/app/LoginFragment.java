@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +45,14 @@ public class LoginFragment extends Fragment {
             String inputPassword = etPassword.getText().toString().trim();
             if (inputEmail.isEmpty() || inputPassword.isEmpty()) {
                 Toast.makeText(getContext(), "Please fill out all fields.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!Patterns.EMAIL_ADDRESS.matcher(inputEmail).matches()) {
+                etEmail.setError("Please enter a valid email");
+                return;
+            }
+            if (inputPassword.length() < 8) {
+                etPassword.setError("Password must be at least 8 characters");
                 return;
             }
 
