@@ -15,6 +15,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.View
 
     public interface OnUserActionListener {
         void onDelete(UserItem user);
+        void onItemClick(UserItem user);
     }
 
     private List<UserItem> list;
@@ -41,6 +42,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.View
         holder.tvRole.setText("Role: " + item.getRole());
 
         holder.ivDelete.setOnClickListener(v -> listener.onDelete(item));
+        holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
     }
 
     @Override

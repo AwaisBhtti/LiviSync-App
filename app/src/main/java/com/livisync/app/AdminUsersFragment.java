@@ -1,5 +1,6 @@
 package com.livisync.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,7 +40,19 @@ public class AdminUsersFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
 
         rvAdminUsers.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new AdminUserAdapter(userList, this::showDeleteConfirmation);
+        adapter = new AdminUserAdapter(userList, new AdminUserAdapter.OnUserActionListener() {
+            @Override
+            public void onDelete(UserItem user) {
+                showDeleteConfirmation(user);
+            }
+
+            @Override
+            public void onItemClick(UserItem user) {
+                Intent intent = new Intent(getActivity(), AdminUserDetailsActivity.class);
+                intent.putExtra("uid", user.getUid());
+                startActivity(intent);
+            }
+        });
         rvAdminUsers.setAdapter(adapter);
 
         loadUsers();
