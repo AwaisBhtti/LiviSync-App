@@ -84,7 +84,6 @@ public class AdminUsersFragment extends Fragment {
         String uid = user.getUid();
         WriteBatch batch = db.batch();
 
-        // 1. Delete user profile and preferences atomically
         batch.delete(db.collection("users").document(uid));
         batch.delete(db.collection("preferences").document(uid));
 

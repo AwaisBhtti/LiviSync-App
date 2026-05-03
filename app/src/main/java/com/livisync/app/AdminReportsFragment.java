@@ -41,17 +41,14 @@ public class AdminReportsFragment extends Fragment {
         adapter = new AdminReportAdapter(reportList, new AdminReportAdapter.OnReportActionListener() {
             @Override
             public void onDismiss(AdminReportItem report) {
-                showActionConfirmation("Dismiss Report", "Are you sure you want to dismiss this report? it will be deleted.", () -> deleteReport(report.getReportId(), "Report dismissed"));
-            }
-
-            @Override
-            public void onResolve(AdminReportItem report) {
-                showActionConfirmation("Resolve Report", "Mark this report as resolved?", () -> updateReportStatus(report.getReportId(), "resolved"));
+                showActionConfirmation("Dismiss Report", "Are you sure you want to dismiss this report?", () -> 
+                    updateReportStatus(report.getReportId(), "dismissed", "Report dismissed"));
             }
 
             @Override
             public void onSuspend(AdminReportItem report) {
-                showActionConfirmation("Suspend User", "Are you sure you want to suspend " + report.getReportedName() + "? They will no longer be able to log in.", () -> suspendUser(report));
+                showActionConfirmation("Suspend User", "Are you sure you want to suspend " + report.getReportedName() + "? They will no longer be able to log in.", () -> 
+                    suspendUserAndResolveReport(report));
             }
         });
         rvAdminReports.setAdapter(adapter);
@@ -92,9 +89,9 @@ public class AdminReportsFragment extends Fragment {
                     if (timestamp == null) timestamp = 0L;
                     final long finalTimestamp = timestamp;
 
-                    db.collection("users").document(reporterUid).get().addOnSuccessListener(reporterDoc -> {
-                        String reporterName = reporterDoc.getString("name");
-                        String reporterEmail = reporterDoc.getString("email");
+                    db.collection("users").document(reporterUid).get().addOnSuccessListener(reporterDocSnap -> {
+                        String reporterName = reporterDocSnap.getString("name");
+                        String reporterEmail = reporterDocSnap.getString("email");
 
                         db.collection("users").document(reportedUid).get().addOnSuccessListener(reportedUserDoc -> {
                             String reportedName = reportedUserDoc.getString("name");
@@ -128,28 +125,22 @@ public class AdminReportsFragment extends Fragment {
                 .show();
     }
 
-    private void updateReportStatus(String reportId, String status) {
+    private void updateReportStatus(String reportId, String status, String successMessage) {
         db.collection("reports").document(reportId).update("status", status)
                 .addOnSuccessListener(aVoid -> {
                     if (getContext() != null)
-                        Toast.makeText(getContext(), "Report " + status, Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    private void deleteReport(String reportId, String message) {
-        db.collection("reports").document(reportId).delete()
-                .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(getContext(), successMessage, Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
                     if (getContext() != null)
-                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Failed to update report: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void suspendUser(AdminReportItem report) {
+    private void suspendUserAndResolveReport(AdminReportItem report) {
         db.collection("users").document(report.getReportedUid()).update("role", "suspended")
                 .addOnSuccessListener(aVoid -> {
-                    updateReportStatus(report.getReportId(), "resolved (user suspended)");
-                    if (getContext() != null)
-                        Toast.makeText(getContext(), "User " + report.getReportedName() + " has been suspended", Toast.LENGTH_SHORT).show();
+                    updateReportStatus(report.getReportId(), "resolved", "User suspended and report resolved");
                 })
                 .addOnFailureListener(e -> {
                     if (getContext() != null)

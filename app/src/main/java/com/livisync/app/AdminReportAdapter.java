@@ -18,7 +18,6 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
 
     public interface OnReportActionListener {
         void onDismiss(AdminReportItem report);
-        void onResolve(AdminReportItem report);
         void onSuspend(AdminReportItem report);
     }
 
@@ -50,7 +49,6 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
         holder.tvDate.setText("Date: " + sdf.format(new Date(item.getTimestamp())));
 
         holder.btnDismiss.setOnClickListener(v -> listener.onDismiss(item));
-        holder.btnResolve.setOnClickListener(v -> listener.onResolve(item));
         holder.btnSuspend.setOnClickListener(v -> listener.onSuspend(item));
     }
 
@@ -61,7 +59,7 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvReporterName, tvReporterEmail, tvReportedName, tvReportedEmail, tvReason, tvDate;
-        Button btnDismiss, btnResolve, btnSuspend;
+        Button btnDismiss, btnSuspend;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -72,7 +70,6 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
             tvReason = itemView.findViewById(R.id.tvReportReason);
             tvDate = itemView.findViewById(R.id.tvReportDate);
             btnDismiss = itemView.findViewById(R.id.btnDismiss);
-            btnResolve = itemView.findViewById(R.id.btnResolve);
             btnSuspend = itemView.findViewById(R.id.btnSuspend);
         }
     }

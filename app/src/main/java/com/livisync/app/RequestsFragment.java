@@ -136,11 +136,13 @@ public class RequestsFragment extends Fragment {
 
     private void updateRequestStatus(RequestItem item, String newStatus) {
         db.collection("matchRequests").document(item.getRequestId())
-                .update("status", newStatus)
+                .delete()
                 .addOnSuccessListener(unused -> {
-                    Toast.makeText(getContext(),
-                            newStatus.equals("accepted") ? "Request accepted!" : "Request declined",
-                            Toast.LENGTH_SHORT).show();
+                    if (isAdded() && getContext() != null) {
+                        Toast.makeText(getContext(),
+                                newStatus.equals("accepted") ? "Request accepted!" : "Request declined",
+                                Toast.LENGTH_SHORT).show();
+                    }
 
                     if (newStatus.equals("accepted")) {
                         createMatch(item);
