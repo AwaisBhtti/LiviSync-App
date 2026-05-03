@@ -6,11 +6,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -26,14 +26,14 @@ public class EditProfileActivity extends AppCompatActivity {
 
     EditText etName, etAge, etBio, etBudgetMin, etBudgetMax, etCity;
     Spinner spGender, spSleep, spCleanliness;
-    Switch swSmoking, swPets, swGuests;
+    SwitchMaterial swSmoking, swPets, swGuests;
     Button btnSaveChanges;
     FirebaseFirestore db;
     String uid;
 
-    String[] genderOptions = {"Male", "Female", "Other"};
-    String[] sleepOptions = {"Early Bird", "Night Owl", "Flexible"};
-    String[] cleanOptions = {"1 - Very Relaxed", "2", "3 - Average", "4", "5 - Very Clean"};
+    String[] genderOptions = {"Male", "Female"};
+    String[] sleepOptions = {"Early Bird", "Late Night", "Night Owl", "Flexible"};
+    String[] cleanOptions = {"1 - Very Relaxed", "2 - Relaxed", "3 - Average", "4 - Clean", "5 - Very Clean"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +74,8 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     private void loadCurrentData() {
-        // Load user data and prefill fields
+        if (uid == null) return;
+
         db.collection("users").document(uid)
                 .get()
                 .addOnSuccessListener(doc -> {
@@ -83,18 +84,18 @@ public class EditProfileActivity extends AppCompatActivity {
                         etAge.setText(doc.getString("age"));
                         etBio.setText(doc.getString("bio"));
 
-                        // Set gender spinner to current value
                         String gender = doc.getString("gender");
-                        for (int i = 0; i < genderOptions.length; i++) {
-                            if (genderOptions[i].equals(gender)) {
-                                spGender.setSelection(i);
-                                break;
+                        if (gender != null) {
+                            for (int i = 0; i < genderOptions.length; i++) {
+                                if (genderOptions[i].equals(gender)) {
+                                    spGender.setSelection(i);
+                                    break;
+                                }
                             }
                         }
                     }
                 });
 
-        // Load preferences and prefill
         db.collection("preferences").document(uid)
                 .get()
                 .addOnSuccessListener(doc -> {
@@ -110,16 +111,16 @@ public class EditProfileActivity extends AppCompatActivity {
                         swPets.setChecked(Boolean.TRUE.equals(doc.getBoolean("petsAllowed")));
                         swGuests.setChecked(Boolean.TRUE.equals(doc.getBoolean("guestsAllowed")));
 
-                        // Set sleep spinner
                         String sleep = doc.getString("sleepSchedule");
-                        for (int i = 0; i < sleepOptions.length; i++) {
-                            if (sleepOptions[i].equals(sleep)) {
-                                spSleep.setSelection(i);
-                                break;
+                        if (sleep != null) {
+                            for (int i = 0; i < sleepOptions.length; i++) {
+                                if (sleepOptions[i].equals(sleep)) {
+                                    spSleep.setSelection(i);
+                                    break;
+                                }
                             }
                         }
 
-                        // Set cleanliness spinner
                         Long clean = doc.getLong("cleanliness");
                         if (clean != null) spCleanliness.setSelection((int)(clean - 1));
                     }
@@ -139,11 +140,26 @@ public class EditProfileActivity extends AppCompatActivity {
         String budgetMin = etBudgetMin.getText().toString().trim();
         String budgetMax = etBudgetMax.getText().toString().trim();
 
-        if (name.isEmpty()) { etName.setError("Required"); return; }
-        if (age.isEmpty()) { etAge.setError("Required"); return; }
-        if (city.isEmpty()) { etCity.setError("Required"); return; }
-        if (budgetMin.isEmpty()) { etBudgetMin.setError("Required"); return; }
-        if (budgetMax.isEmpty()) { etBudgetMax.setError("Required"); return; }
+        if (name.isEmpty()) {
+            etName.setError("Required");
+            return;
+        }
+        if (age.isEmpty()) {
+            etAge.setError("Required");
+            return;
+        }
+        if (city.isEmpty()) {
+            etCity.setError("Required");
+            return;
+        }
+        if (budgetMin.isEmpty()) {
+            etBudgetMin.setError("Required");
+            return;
+        }
+        if (budgetMax.isEmpty()) {
+            etBudgetMax.setError("Required");
+            return;
+        }
 
         int parsedBudgetMin;
         int parsedBudgetMax;
@@ -161,14 +177,12 @@ public class EditProfileActivity extends AppCompatActivity {
             return;
         }
 
-        // Save to users collection
         Map<String, Object> userUpdates = new HashMap<>();
         userUpdates.put("name", name);
         userUpdates.put("age", age);
         userUpdates.put("bio", bio);
         userUpdates.put("gender", spGender.getSelectedItem().toString());
 
-        // Save to preferences collection
         Map<String, Object> prefUpdates = new HashMap<>();
         prefUpdates.put("sleepSchedule", spSleep.getSelectedItem().toString());
         prefUpdates.put("cleanliness", spCleanliness.getSelectedItemPosition() + 1);
@@ -179,7 +193,6 @@ public class EditProfileActivity extends AppCompatActivity {
         prefUpdates.put("petsAllowed", swPets.isChecked());
         prefUpdates.put("guestsAllowed", swGuests.isChecked());
 
-        // Use an atomic upsert so missing documents are created instead of failing on update().
         WriteBatch batch = db.batch();
         batch.set(db.collection("users").document(uid), userUpdates, SetOptions.merge());
         batch.set(db.collection("preferences").document(uid), prefUpdates, SetOptions.merge());

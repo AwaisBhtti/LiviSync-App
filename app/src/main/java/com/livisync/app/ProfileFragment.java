@@ -23,8 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ProfileFragment extends Fragment {
 
-    TextView tvName, tvCityDept, tvSleep, tvCleanliness, tvBudget, tvGuests, tvPets;
-    ImageView tvAvatar;
+    TextView tvName, tvCityDept, tvSleep, tvCleanliness, tvBudget, tvGuests, tvPets, tvAvatar;
     Button btnEditProfile, btnLogout;
     FirebaseFirestore db;
     String uid;
@@ -51,7 +50,6 @@ public class ProfileFragment extends Fragment {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnLogout = view.findViewById(R.id.btnLogout);
 
-        setAvatarFallback();
         loadProfile();
 
         btnEditProfile.setOnClickListener(v -> {
@@ -59,6 +57,7 @@ public class ProfileFragment extends Fragment {
         });
 
         btnLogout.setOnClickListener(v -> {
+            btnLogout.setBackgroundColor(getResources().getColor(R.color.grey));
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(getActivity(), LoginActivity.class));
             requireActivity().finish();
@@ -75,15 +74,16 @@ public class ProfileFragment extends Fragment {
                     if (doc.exists()) {
                         String name = doc.getString("name");
                         String city = doc.getString("city") != null ? doc.getString("city") : "";
-                        String photoUrl = doc.getString("photoUrl");
 
                         tvName.setText(name);
                         tvCityDept.setText("CS Student" + city);
 
-                        if (photoUrl != null && !photoUrl.trim().isEmpty()) {
-                            loadAvatar(photoUrl.trim());
-                        } else {
-                            setAvatarFallback();
+                        if (name != null && !name.isEmpty()) {
+                            String initials = String.valueOf(name.charAt(0)).toUpperCase();
+                            if (name.contains(" ")) {
+                                initials += String.valueOf(name.split(" ")[1].charAt(0)).toUpperCase();
+                            }
+                            tvAvatar.setText(initials);
                         }
                     }
                 });
@@ -108,30 +108,7 @@ public class ProfileFragment extends Fragment {
                 });
     }
 
-    private void loadAvatar(String photoUrl) {
-        Glide.with(this)
-                .load(photoUrl)
-                .circleCrop()
-                .listener(new RequestListener<android.graphics.drawable.Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(GlideException e, Object model, Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
-                        setAvatarFallback();
-                        return true;
-                    }
 
-                    @Override
-                    public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, Target<android.graphics.drawable.Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        tvAvatar.clearColorFilter();
-                        return false;
-                    }
-                })
-                .into(tvAvatar);
-    }
-
-    private void setAvatarFallback() {
-        tvAvatar.setImageResource(R.drawable.profile);
-        tvAvatar.setColorFilter(Color.WHITE);
-    }
 
     @Override
     public void onResume() {

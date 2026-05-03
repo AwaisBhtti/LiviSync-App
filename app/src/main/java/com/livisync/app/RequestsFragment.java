@@ -69,11 +69,16 @@ public class RequestsFragment extends Fragment {
     private void loadIncomingRequests() {
         db.collection("matchRequests")
                 .whereEqualTo("toUid", myUid)
+                .whereEqualTo("status", "pending")
                 .get()
                 .addOnSuccessListener(snap -> {
                     incomingList.clear();
                     List<DocumentSnapshot> docs = snap.getDocuments();
-                    if (docs.isEmpty()) return;
+                    if (docs.isEmpty()) {
+                        if (getActivity() != null)
+                            getActivity().runOnUiThread(() -> incomingAdapter.updateList(incomingList));
+                        return;
+                    }
 
                     final int[] count = {0};
                     for (DocumentSnapshot doc : docs) {
@@ -98,11 +103,16 @@ public class RequestsFragment extends Fragment {
     private void loadOutgoingRequests() {
         db.collection("matchRequests")
                 .whereEqualTo("fromUid", myUid)
+                .whereEqualTo("status", "pending")
                 .get()
                 .addOnSuccessListener(snap -> {
                     outgoingList.clear();
                     List<DocumentSnapshot> docs = snap.getDocuments();
-                    if (docs.isEmpty()) return;
+                    if (docs.isEmpty()) {
+                        if (getActivity() != null)
+                            getActivity().runOnUiThread(() -> outgoingAdapter.updateList(outgoingList));
+                        return;
+                    }
 
                     final int[] count = {0};
                     for (DocumentSnapshot doc : docs) {
@@ -126,11 +136,13 @@ public class RequestsFragment extends Fragment {
 
     private void updateRequestStatus(RequestItem item, String newStatus) {
         db.collection("matchRequests").document(item.getRequestId())
-                .update("status", newStatus)
+                .delete()
                 .addOnSuccessListener(unused -> {
-                    Toast.makeText(getContext(),
-                            newStatus.equals("accepted") ? "Request accepted!" : "Request declined",
-                            Toast.LENGTH_SHORT).show();
+                    if (isAdded() && getContext() != null) {
+                        Toast.makeText(getContext(),
+                                newStatus.equals("accepted") ? "Request accepted!" : "Request declined",
+                                Toast.LENGTH_SHORT).show();
+                    }
 
                     if (newStatus.equals("accepted")) {
                         createMatch(item);
@@ -141,11 +153,13 @@ public class RequestsFragment extends Fragment {
     }
 
     private void createMatch(RequestItem item) {
-        // Create a match document so chat can use it
         java.util.Map<String, Object> match = new java.util.HashMap<>();
         match.put("user1", myUid);
         match.put("user2", item.getOtherUid());
         match.put("timestamp", System.currentTimeMillis());
+        match.put("unread_" + myUid, false);
+        match.put("unread_" + item.getOtherUid(), false);
+        match.put("lastMessage", "New match! Say hello.");
 
         db.collection("matches").add(match);
     }

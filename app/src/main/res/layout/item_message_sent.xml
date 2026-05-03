@@ -9,13 +9,14 @@
         android:id="@+id/tvMessageText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:maxWidth="260dp"
+        android:maxWidth="280dp"
+        android:backgroundTint="@color/darkGrey"
         android:background="@drawable/bubble_sent"
-        android:textColor="@android:color/white"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"
         android:paddingTop="10dp"
+        android:paddingEnd="16dp"
         android:paddingBottom="10dp"
-        android:textSize="14sp"/>
+        android:textColor="@color/white"
+        android:textSize="14sp" />
 
 </LinearLayout>

@@ -1,9 +1,8 @@
 package com.livisync.app;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,15 +13,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import kotlinx.coroutines.flow.SharedFlow;
 
 public class LoginFragment extends Fragment {
 
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
     private TextInputEditText etEmail, etPassword;
     private Button btnLogin;
 
@@ -37,7 +36,8 @@ public class LoginFragment extends Fragment {
         etEmail = view.findViewById(R.id.etEmail);
         etPassword = view.findViewById(R.id.etPassword);
         btnLogin = view.findViewById(R.id.btnLogin);
-        mAuth=FirebaseAuth.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         btnLogin.setOnClickListener(v -> {
             String inputEmail = etEmail.getText().toString().trim();
@@ -46,13 +46,60 @@ public class LoginFragment extends Fragment {
                 Toast.makeText(getContext(), "Please fill out all fields.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            mAuth.signInWithEmailAndPassword(inputEmail, inputPassword).addOnSuccessListener(authResult -> {
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                requireActivity().finish();
-            })
+            if (!Patterns.EMAIL_ADDRESS.matcher(inputEmail).matches()) {
+                etEmail.setError("Please enter a valid email");
+                return;
+            }
+            if (inputPassword.length() < 6) {
+                etPassword.setError("Password must be at least 8 characters");
+                return;
+            }
+
+            btnLogin.setEnabled(false);
+            btnLogin.setBackgroundColor(getResources().getColor(R.color.grey));
+            
+            mAuth.signInWithEmailAndPassword(inputEmail, inputPassword)
+                    .addOnSuccessListener(authResult -> {
+                        checkUserRole(authResult.getUser().getUid());
+                    })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Login failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        btnLogin.setEnabled(true);
+                        btnLogin.setBackgroundColor(getResources().getColor(R.color.darkGrey));
                     });
         });
+    }
+
+    private void checkUserRole(String uid) {
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String role = documentSnapshot.getString("role");
+                        
+                        if ("suspended".equals(role)) {
+                            FirebaseAuth.getInstance().signOut();
+                            Toast.makeText(getContext(), "Your account has been suspended for violating community guidelines.", Toast.LENGTH_LONG).show();
+                            btnLogin.setEnabled(true);
+                            btnLogin.setBackgroundColor(getResources().getColor(R.color.darkGrey));
+                            return;
+                        }
+
+                        if ("admin".equals(role)) {
+                            startActivity(new Intent(getActivity(), AdminMainActivity.class));
+                        } else {
+                            startActivity(new Intent(getActivity(), MainActivity.class));
+                        }
+                        requireActivity().finish();
+                    } else {
+                        Toast.makeText(getContext(), "User data not found", Toast.LENGTH_SHORT).show();
+                        btnLogin.setEnabled(true);
+                        btnLogin.setBackgroundColor(getResources().getColor(R.color.darkGrey));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    btnLogin.setEnabled(true);
+                    btnLogin.setBackgroundColor(getResources().getColor(R.color.darkGrey));
+                });
     }
 }

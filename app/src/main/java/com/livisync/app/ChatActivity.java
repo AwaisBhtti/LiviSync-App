@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
@@ -22,13 +23,14 @@ public class ChatActivity extends AppCompatActivity {
 
     RecyclerView rvMessages;
     EditText etMessage;
-    Button btnSend, btnBack;
-    TextView tvChatName;
+    Button btnSend;
+    TextView tvChatName, tvAvatar;
 
     FirebaseFirestore db;
     String myUid, matchId, otherUid, otherName;
     List<MessageItem> messageList = new ArrayList<>();
     MessageAdapter adapter;
+    private ListenerRegistration matchListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,19 +46,39 @@ public class ChatActivity extends AppCompatActivity {
         rvMessages = findViewById(R.id.rvMessages);
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
-        btnBack = findViewById(R.id.btnBack);
         tvChatName = findViewById(R.id.tvChatName);
+        tvAvatar = findViewById(R.id.tvChatAvatar);
 
         tvChatName.setText(otherName);
+
+        String initials = String.valueOf(otherName.charAt(0)).toUpperCase();
+        tvAvatar.setText(initials);
 
         adapter = new MessageAdapter(messageList, myUid);
         rvMessages.setLayoutManager(new LinearLayoutManager(this));
         rvMessages.setAdapter(adapter);
 
         listenForMessages();
+        startMatchListener();
 
         btnSend.setOnClickListener(v -> sendMessage());
-        btnBack.setOnClickListener(v -> finish());
+    }
+
+    private void startMatchListener() {
+        // Clear unread flag whenever it becomes true while we are in this chat
+        matchListener = db.collection("matches").document(matchId)
+                .addSnapshotListener((doc, e) -> {
+                    if (doc != null && doc.exists()) {
+                        if (Boolean.TRUE.equals(doc.getBoolean("unread_" + myUid))) {
+                            markAsRead();
+                        }
+                    }
+                });
+    }
+
+    private void markAsRead() {
+        db.collection("matches").document(matchId)
+                .update("unread_" + myUid, false);
     }
 
     private void listenForMessages() {
@@ -86,10 +108,12 @@ public class ChatActivity extends AppCompatActivity {
         String text = etMessage.getText().toString().trim();
         if (text.isEmpty()) return;
 
+        long timestamp = System.currentTimeMillis();
+
         Map<String, Object> message = new HashMap<>();
         message.put("text", text);
         message.put("senderUid", myUid);
-        message.put("timestamp", System.currentTimeMillis());
+        message.put("timestamp", timestamp);
 
         db.collection("messages")
                 .document(matchId)
@@ -97,6 +121,19 @@ public class ChatActivity extends AppCompatActivity {
                 .add(message)
                 .addOnSuccessListener(ref -> {
                     etMessage.setText("");
+                    
+                    Map<String, Object> update = new HashMap<>();
+                    update.put("lastMessage", text);
+                    update.put("lastMessageTimestamp", timestamp);
+                    update.put("unread_" + otherUid, true);
+                    
+                    db.collection("matches").document(matchId).update(update);
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (matchListener != null) matchListener.remove();
     }
 }
