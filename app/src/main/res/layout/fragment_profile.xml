@@ -130,6 +130,16 @@
                     app:cornerRadius="12dp" />
 
                 <Button
+                    android:id="@+id/btnMyReports"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="12dp"
+                    android:backgroundTint="@color/black"
+                    android:text="My Submitted Reports"
+                    android:textColor="@color/white"
+                    app:cornerRadius="12dp" />
+
+                <Button
                     android:id="@+id/btnLogout"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
