@@ -24,7 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class ProfileFragment extends Fragment {
 
     TextView tvName, tvCityDept, tvSleep, tvCleanliness, tvBudget, tvGuests, tvPets, tvAvatar;
-    Button btnEditProfile, btnLogout;
+    Button btnEditProfile, btnLogout, btnMyReports;
     FirebaseFirestore db;
     String uid;
 
@@ -49,11 +49,19 @@ public class ProfileFragment extends Fragment {
         tvPets = view.findViewById(R.id.tvPets);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnLogout = view.findViewById(R.id.btnLogout);
+        btnMyReports = view.findViewById(R.id.btnMyReports);
 
         loadProfile();
 
         btnEditProfile.setOnClickListener(v -> {
             startActivity(new Intent(getActivity(), EditProfileActivity.class));
+        });
+
+        btnMyReports.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, new MyReportsFragment())
+                    .addToBackStack(null)
+                    .commit();
         });
 
         btnLogout.setOnClickListener(v -> {
