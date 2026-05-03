@@ -174,6 +174,60 @@ public class SearchFragment extends Fragment {
     }
 
     private void sendMatchRequest(RoommateItem item) {
+        String targetUid = item.getUid();
+
+        db.collection("matchRequests")
+                .whereEqualTo("fromUid", myUid)
+                .whereEqualTo("toUid", targetUid)
+                .get()
+                .addOnSuccessListener(snap1 -> {
+                    if (!snap1.isEmpty()) {
+                        handleInteracted("Request already sent");
+                        return;
+                    }
+
+                    db.collection("matchRequests")
+                            .whereEqualTo("fromUid", targetUid)
+                            .whereEqualTo("toUid", myUid)
+                            .get()
+                            .addOnSuccessListener(snap2 -> {
+                                if (!snap2.isEmpty()) {
+                                    handleInteracted("They already sent you a request!");
+                                    return;
+                                }
+
+                                db.collection("matches")
+                                        .whereEqualTo("user1", myUid)
+                                        .whereEqualTo("user2", targetUid)
+                                        .get()
+                                        .addOnSuccessListener(snap3 -> {
+                                            if (!snap3.isEmpty()) {
+                                                handleInteracted("Already friends!");
+                                                return;
+                                            }
+
+                                            db.collection("matches")
+                                                    .whereEqualTo("user1", targetUid)
+                                                    .whereEqualTo("user2", myUid)
+                                                    .get()
+                                                    .addOnSuccessListener(snap4 -> {
+                                                        if (!snap4.isEmpty()) {
+                                                            handleInteracted("Already friends!");
+                                                            return;
+                                                        }
+
+                                                        executeSendRequest(item);
+                                                    });
+                                        });
+                            });
+                });
+    }
+
+    private void handleInteracted(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void executeSendRequest(RoommateItem item) {
         java.util.Map<String, Object> request = new java.util.HashMap<>();
         request.put("fromUid", myUid);
         request.put("toUid", item.getUid());
@@ -186,6 +240,7 @@ public class SearchFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
                 });
     }
 

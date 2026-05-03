@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +34,8 @@ public class HomeFragment extends Fragment {
     FirebaseFirestore db;
     String myUid;
     Preferences myPrefs;
+
+    private ListenerRegistration requestsListener, matchesListener1, matchesListener2;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -68,7 +71,7 @@ public class HomeFragment extends Fragment {
         rvRoommates.setAdapter(adapter);
 
         loadMyPreferencesThenUsers();
-        loadStats();
+        startStatsListeners();
 
         return view;
     }
@@ -115,17 +118,60 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadAllUsers() {
+        List<String> excludedUids = new ArrayList<>();
+        excludedUids.add(myUid);
+
+        db.collection("matchRequests")
+                .whereEqualTo("fromUid", myUid)
+                .get()
+                .addOnSuccessListener(snap1 -> {
+                    for (DocumentSnapshot doc : snap1.getDocuments()) {
+                        excludedUids.add(doc.getString("toUid"));
+                    }
+                    db.collection("matchRequests")
+                            .whereEqualTo("toUid", myUid)
+                            .get()
+                            .addOnSuccessListener(snap2 -> {
+                                for (DocumentSnapshot doc : snap2.getDocuments()) {
+                                    excludedUids.add(doc.getString("fromUid"));
+                                }
+                                
+                                db.collection("matches")
+                                        .whereEqualTo("user1", myUid)
+                                        .get()
+                                        .addOnSuccessListener(snap3 -> {
+                                            for (DocumentSnapshot doc : snap3.getDocuments()) {
+                                                excludedUids.add(doc.getString("user2"));
+                                            }
+                                            db.collection("matches")
+                                                    .whereEqualTo("user2", myUid)
+                                                    .get()
+                                                    .addOnSuccessListener(snap4 -> {
+                                                        for (DocumentSnapshot doc : snap4.getDocuments()) {
+                                                            excludedUids.add(doc.getString("user1"));
+                                                        }
+                                                        fetchAndFilterUsers(excludedUids);
+                                                    });
+                                        });
+                            });
+                });
+    }
+
+    private void fetchAndFilterUsers(List<String> excludedUids) {
         FirestoreHelper.getAllUsers(userSnapshots -> {
             List<DocumentSnapshot> userDocs = userSnapshots.getDocuments();
 
             allRoommates.clear();
-            final int[] processed = {0};
+            if (userDocs.isEmpty()) {
+                sortAndDisplay();
+                return;
+            }
 
+            final int[] processed = {0};
             for (DocumentSnapshot userDoc : userDocs) {
                 String uid = userDoc.getString("uid");
 
-                // Skip yourself
-                if (uid == null || uid.equals(myUid)) {
+                if (uid == null || excludedUids.contains(uid)) {
                     processed[0]++;
                     if (processed[0] == userDocs.size()) {
                         sortAndDisplay();
@@ -136,7 +182,6 @@ public class HomeFragment extends Fragment {
                 String name = userDoc.getString("name");
                 String bio = userDoc.getString("bio");
 
-                // Get their preferences to calculate score
                 FirestoreHelper.getPreferences(uid, prefDoc -> {
                     processed[0]++;
 
@@ -178,23 +223,125 @@ public class HomeFragment extends Fragment {
 
             if (!allRoommates.isEmpty()) {
                 tvTopMatch.setText(allRoommates.get(0).getScore() + "%");
+            } else {
+                tvTopMatch.setText("0%");
             }
         });
     }
 
-    private void loadStats() {
-        db.collection("matchRequests")
+    private void startStatsListeners() {
+        // Real-time pending requests
+        requestsListener = db.collection("matchRequests")
                 .whereEqualTo("toUid", myUid)
                 .whereEqualTo("status", "pending")
-                .get()
-                .addOnSuccessListener(snap -> {
-                    if (getActivity() != null)
+                .addSnapshotListener((snap, e) -> {
+                    if (snap != null && getActivity() != null) {
                         getActivity().runOnUiThread(() ->
                                 tvPendingRequests.setText(String.valueOf(snap.size())));
+                    }
+                });
+
+        // Real-time unread chats
+        updateUnreadCount();
+    }
+
+    private int unreadCount1 = 0;
+    private int unreadCount2 = 0;
+
+    private void updateUnreadCount() {
+        matchesListener1 = db.collection("matches")
+                .whereEqualTo("user1", myUid)
+                .whereEqualTo("unread_" + myUid, true)
+                .addSnapshotListener((snap, e) -> {
+                    if (snap != null) {
+                        unreadCount1 = snap.size();
+                        displayTotalUnread();
+                    }
+                });
+
+        matchesListener2 = db.collection("matches")
+                .whereEqualTo("user2", myUid)
+                .whereEqualTo("unread_" + myUid, true)
+                .addSnapshotListener((snap, e) -> {
+                    if (snap != null) {
+                        unreadCount2 = snap.size();
+                        displayTotalUnread();
+                    }
                 });
     }
 
+    private void displayTotalUnread() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() ->
+                    tvUnreadChats.setText(String.valueOf(unreadCount1 + unreadCount2)));
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (requestsListener != null) requestsListener.remove();
+        if (matchesListener1 != null) matchesListener1.remove();
+        if (matchesListener2 != null) matchesListener2.remove();
+    }
+
     private void sendMatchRequest(RoommateItem item) {
+        String targetUid = item.getUid();
+
+        db.collection("matchRequests")
+                .whereEqualTo("fromUid", myUid)
+                .whereEqualTo("toUid", targetUid)
+                .get()
+                .addOnSuccessListener(snap1 -> {
+                    if (!snap1.isEmpty()) {
+                        handleInteracted(item, "Request already sent");
+                        return;
+                    }
+
+                    db.collection("matchRequests")
+                            .whereEqualTo("fromUid", targetUid)
+                            .whereEqualTo("toUid", myUid)
+                            .get()
+                            .addOnSuccessListener(snap2 -> {
+                                if (!snap2.isEmpty()) {
+                                    handleInteracted(item, "They already sent you a request!");
+                                    return;
+                                }
+
+                                db.collection("matches")
+                                        .whereEqualTo("user1", myUid)
+                                        .whereEqualTo("user2", targetUid)
+                                        .get()
+                                        .addOnSuccessListener(snap3 -> {
+                                            if (!snap3.isEmpty()) {
+                                                handleInteracted(item, "Already friends!");
+                                                return;
+                                            }
+
+                                            db.collection("matches")
+                                                    .whereEqualTo("user1", targetUid)
+                                                    .whereEqualTo("user2", myUid)
+                                                    .get()
+                                                    .addOnSuccessListener(snap4 -> {
+                                                        if (!snap4.isEmpty()) {
+                                                            handleInteracted(item, "Already friends!");
+                                                            return;
+                                                        }
+
+                                                        executeSendRequest(item);
+                                                    });
+                                        });
+                            });
+                });
+    }
+
+    private void handleInteracted(RoommateItem item, String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        allRoommates.remove(item);
+        adapter.updateList(allRoommates);
+    }
+
+    private void executeSendRequest(RoommateItem item) {
         java.util.Map<String, Object> request = new java.util.HashMap<>();
         request.put("fromUid", myUid);
         request.put("toUid", item.getUid());
@@ -204,6 +351,8 @@ public class HomeFragment extends Fragment {
         db.collection("matchRequests").add(request)
                 .addOnSuccessListener(ref -> {
                     Toast.makeText(getContext(), "Request sent to " + item.getName(), Toast.LENGTH_SHORT).show();
+                    allRoommates.remove(item);
+                    adapter.updateList(allRoommates);
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();

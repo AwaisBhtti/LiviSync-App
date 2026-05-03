@@ -1,11 +1,13 @@
 package com.livisync.app;
 
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
@@ -40,6 +42,16 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
 
         String initials = String.valueOf(item.getOtherName().charAt(0)).toUpperCase();
         holder.tvAvatar.setText(initials);
+
+        if (item.isUnread()) {
+            holder.tvName.setTypeface(null, Typeface.BOLD);
+            holder.tvLastMessage.setTypeface(null, Typeface.BOLD);
+            holder.tvLastMessage.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.darkGrey));
+        } else {
+            holder.tvName.setTypeface(null, Typeface.NORMAL);
+            holder.tvLastMessage.setTypeface(null, Typeface.NORMAL);
+            holder.tvLastMessage.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.grey));
+        }
 
         holder.itemView.setOnClickListener(v -> listener.onClick(item));
     }

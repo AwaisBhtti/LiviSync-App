@@ -50,50 +50,65 @@ public class ChatFragment extends Fragment {
     }
 
     private void loadMatches() {
-        // Load matches where I am user1
+        // Use real-time listeners so unread status updates instantly
         db.collection("matches")
                 .whereEqualTo("user1", myUid)
-                .get()
-                .addOnSuccessListener(snap -> {
-                    for (DocumentSnapshot doc : snap.getDocuments()) {
-                        String otherUid = doc.getString("user2");
-                        loadChatItem(doc.getId(), otherUid);
-                    }
+                .addSnapshotListener((snap, e) -> {
+                    if (snap == null) return;
+                    processMatchSnapshots(snap.getDocuments(), true);
                 });
 
-        // Load matches where I am user2
         db.collection("matches")
                 .whereEqualTo("user2", myUid)
-                .get()
-                .addOnSuccessListener(snap -> {
-                    for (DocumentSnapshot doc : snap.getDocuments()) {
-                        String otherUid = doc.getString("user1");
-                        loadChatItem(doc.getId(), otherUid);
-                    }
+                .addSnapshotListener((snap, e) -> {
+                    if (snap == null) return;
+                    processMatchSnapshots(snap.getDocuments(), false);
                 });
     }
 
-    private void loadChatItem(String matchId, String otherUid) {
+    private synchronized void processMatchSnapshots(List<DocumentSnapshot> docs, boolean isUser1) {
+        for (DocumentSnapshot doc : docs) {
+            String matchId = doc.getId();
+            String otherUid = isUser1 ? doc.getString("user2") : doc.getString("user1");
+            boolean unread = Boolean.TRUE.equals(doc.getBoolean("unread_" + myUid));
+            loadChatItem(matchId, otherUid, unread);
+        }
+    }
+
+    private void loadChatItem(String matchId, String otherUid, boolean unread) {
         db.collection("users").document(otherUid).get()
                 .addOnSuccessListener(userDoc -> {
                     String name = userDoc.getString("name");
 
-                    // Get last message
-                    db.collection("messages").document(matchId)
-                            .collection("chats")
-                            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                            .limit(1)
-                            .get()
-                            .addOnSuccessListener(msgSnap -> {
-                                String lastMsg = "Say hello!";
-                                if (!msgSnap.isEmpty()) {
-                                    lastMsg = msgSnap.getDocuments().get(0).getString("text");
-                                }
-                                chatList.add(new ChatItem(matchId, otherUid, name, lastMsg));
-                                if (getActivity() != null) {
-                                    getActivity().runOnUiThread(() -> adapter.updateList(chatList));
-                                }
+                    // Get last message from the match document itself (more efficient)
+                    db.collection("matches").document(matchId).get()
+                            .addOnSuccessListener(matchDoc -> {
+                                String lastMsg = matchDoc.getString("lastMessage");
+                                if (lastMsg == null) lastMsg = "Say hello!";
+
+                                ChatItem newItem = new ChatItem(matchId, otherUid, name, lastMsg, unread);
+                                updateOrAddChatItem(newItem);
                             });
                 });
+    }
+
+    private synchronized void updateOrAddChatItem(ChatItem newItem) {
+        int index = -1;
+        for (int i = 0; i < chatList.size(); i++) {
+            if (chatList.get(i).getMatchId().equals(newItem.getMatchId())) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index != -1) {
+            chatList.set(index, newItem);
+        } else {
+            chatList.add(newItem);
+        }
+
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> adapter.updateList(new ArrayList<>(chatList)));
+        }
     }
 }

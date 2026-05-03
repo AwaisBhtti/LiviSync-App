@@ -48,6 +48,7 @@ public class RoommateAdapter extends RecyclerView.Adapter<RoommateAdapter.ViewHo
         holder.btnSend.setOnClickListener(v -> {
             listener.onSendRequest(item);
             holder.btnSend.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.grey));
+            holder.btnSend.setEnabled(false);
         });
         holder.btnView.setOnClickListener(v -> listener.onViewProfile(item));
     }

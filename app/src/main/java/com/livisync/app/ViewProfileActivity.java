@@ -51,9 +51,69 @@ public class ViewProfileActivity extends AppCompatActivity {
         tvMatchScore.setText(matchScore + "% Match");
 
         loadProfile();
+        checkInteractionStatus();
 
         btnBack.setOnClickListener(v -> finish());
         btnSendRequest.setOnClickListener(v -> sendRequest());
+    }
+
+    private void checkInteractionStatus() {
+        btnSendRequest.setEnabled(false);
+        
+        db.collection("matchRequests")
+                .whereEqualTo("fromUid", myUid)
+                .whereEqualTo("toUid", theirUid)
+                .get()
+                .addOnSuccessListener(snap1 -> {
+                    if (!snap1.isEmpty()) {
+                        updateButton("Request Sent", false);
+                        return;
+                    }
+                    
+                    db.collection("matchRequests")
+                            .whereEqualTo("fromUid", theirUid)
+                            .whereEqualTo("toUid", myUid)
+                            .get()
+                            .addOnSuccessListener(snap2 -> {
+                                if (!snap2.isEmpty()) {
+                                    updateButton("Request Pending", false);
+                                    return;
+                                }
+                                
+                                db.collection("matches")
+                                        .whereEqualTo("user1", myUid)
+                                        .whereEqualTo("user2", theirUid)
+                                        .get()
+                                        .addOnSuccessListener(snap3 -> {
+                                            if (!snap3.isEmpty()) {
+                                                updateButton("Friends", false);
+                                                return;
+                                            }
+                                            
+                                            db.collection("matches")
+                                                    .whereEqualTo("user1", theirUid)
+                                                    .whereEqualTo("user2", myUid)
+                                                    .get()
+                                                    .addOnSuccessListener(snap4 -> {
+                                                        if (!snap4.isEmpty()) {
+                                                            updateButton("Friends", false);
+                                                        } else {
+                                                            updateButton("Send Request", true);
+                                                        }
+                                                    });
+                                        });
+                            });
+                });
+    }
+
+    private void updateButton(String text, boolean enabled) {
+        btnSendRequest.setText(text);
+        btnSendRequest.setEnabled(enabled);
+        if (!enabled) {
+            btnSendRequest.setBackgroundColor(getResources().getColor(R.color.grey));
+        } else {
+            btnSendRequest.setBackgroundColor(getResources().getColor(R.color.darkGrey));
+        }
     }
 
     private void loadProfile() {
