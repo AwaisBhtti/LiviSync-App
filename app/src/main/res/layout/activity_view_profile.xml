@@ -172,10 +172,22 @@
                     android:id="@+id/btnSendRequest"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
+                    android:layout_marginBottom="12dp"
                     android:backgroundTint="@color/darkGrey"
                     android:text="Send Match Request"
                     android:textColor="@color/white"
                     app:cornerRadius="12dp" />
+
+                <TextView
+                    android:id="@+id/tvReport"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Report this user"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:textSize="14sp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"/>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>

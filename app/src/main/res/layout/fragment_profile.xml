@@ -124,7 +124,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginBottom="12dp"
-                    android:backgroundTint="@color/darkGrey"
+                    android:backgroundTint="@color/black"
                     android:text="@string/profile_edit_button"
                     android:textColor="@color/white"
                     app:cornerRadius="12dp" />

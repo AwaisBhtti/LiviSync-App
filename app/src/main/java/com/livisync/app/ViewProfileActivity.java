@@ -5,6 +5,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class ViewProfileActivity extends AppCompatActivity {
 
     TextView tvAvatar, tvName, tvMatchScore, tvAgeGender, tvBio;
-    TextView tvCity, tvSleep, tvBudget, tvCleanliness, tvSmoking, tvPets, tvGuests;
+    TextView tvCity, tvSleep, tvBudget, tvCleanliness, tvSmoking, tvPets, tvGuests, tvReport;
     Button btnSendRequest, btnBack;
 
     FirebaseFirestore db;
@@ -45,6 +46,7 @@ public class ViewProfileActivity extends AppCompatActivity {
         tvSmoking = findViewById(R.id.tvSmoking);
         tvPets = findViewById(R.id.tvPets);
         tvGuests = findViewById(R.id.tvGuests);
+        tvReport = findViewById(R.id.tvReport);
         btnSendRequest = findViewById(R.id.btnSendRequest);
         btnBack = findViewById(R.id.btnBack);
 
@@ -55,6 +57,35 @@ public class ViewProfileActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
         btnSendRequest.setOnClickListener(v -> sendRequest());
+        tvReport.setOnClickListener(v -> showReportDialog());
+    }
+
+    private void showReportDialog() {
+        String[] reasons = {"Inappropriate content", "Harassment", "Spam", "Fake Profile", "Other"};
+        new AlertDialog.Builder(this)
+                .setTitle("Report User")
+                .setItems(reasons, (dialog, which) -> {
+                    submitReport(reasons[which]);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void submitReport(String reason) {
+        Map<String, Object> report = new HashMap<>();
+        report.put("reporterUid", myUid);
+        report.put("reportedUid", theirUid);
+        report.put("reason", reason);
+        report.put("timestamp", System.currentTimeMillis());
+        report.put("status", "pending");
+
+        db.collection("reports").add(report)
+                .addOnSuccessListener(ref -> {
+                    Toast.makeText(this, "Report submitted. Thank you.", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to submit report: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void checkInteractionStatus() {

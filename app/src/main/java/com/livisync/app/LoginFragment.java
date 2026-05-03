@@ -75,6 +75,15 @@ public class LoginFragment extends Fragment {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String role = documentSnapshot.getString("role");
+                        
+                        if ("suspended".equals(role)) {
+                            FirebaseAuth.getInstance().signOut();
+                            Toast.makeText(getContext(), "Your account has been suspended for violating community guidelines.", Toast.LENGTH_LONG).show();
+                            btnLogin.setEnabled(true);
+                            btnLogin.setBackgroundColor(getResources().getColor(R.color.darkGrey));
+                            return;
+                        }
+
                         if ("admin".equals(role)) {
                             startActivity(new Intent(getActivity(), AdminMainActivity.class));
                         } else {

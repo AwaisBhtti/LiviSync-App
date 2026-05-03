@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -42,7 +43,12 @@ public class SplashActivity extends AppCompatActivity {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String role = documentSnapshot.getString("role");
-                        if ("admin".equals(role)) {
+                        
+                        if ("suspended".equals(role)) {
+                            FirebaseAuth.getInstance().signOut();
+                            Toast.makeText(this, "Your account has been suspended.", Toast.LENGTH_LONG).show();
+                            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                        } else if ("admin".equals(role)) {
                             startActivity(new Intent(SplashActivity.this, AdminMainActivity.class));
                         } else {
                             startActivity(new Intent(SplashActivity.this, MainActivity.class));
