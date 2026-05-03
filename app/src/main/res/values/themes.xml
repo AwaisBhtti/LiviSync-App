@@ -6,7 +6,13 @@
         <item name="android:navigationBarColor">@color/black</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="indicatorColor">@color/grey</item>
+
+        <item name="android:spinnerStyle">@style/Widget.LiviSync.Spinner</item>
     </style>
 
     <style name="Theme.LiviSync" parent="Base.Theme.LiviSync" />
+
+    <style name="Widget.LiviSync.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">@color/white</item>
+    </style>
 </resources>

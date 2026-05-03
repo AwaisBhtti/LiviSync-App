@@ -150,31 +150,52 @@
         android:paddingStart="24dp"
         android:paddingEnd="24dp">
 
-        <Spinner
-            android:id="@+id/spFilterBudget"
+        <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@color/white"
-            android:backgroundTint="@color/white"/>
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
+            <Spinner
+                android:id="@+id/spFilterBudget"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:background="@android:color/transparent"
+                android:popupBackground="@color/white"/>
+        </androidx.cardview.widget.CardView>
 
-        <Spinner
-            android:id="@+id/spFilterSleep"
+        <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:background="@color/white" />
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
+            <Spinner
+                android:id="@+id/spFilterSleep"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:background="@android:color/transparent"
+                android:popupBackground="@color/white"/>
+        </androidx.cardview.widget.CardView>
 
-        <Spinner
-            android:id="@+id/spFilterPets"
+        <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:background="@color/white" />
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
+            <Spinner
+                android:id="@+id/spFilterPets"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:background="@android:color/transparent"
+                android:popupBackground="@color/white"/>
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

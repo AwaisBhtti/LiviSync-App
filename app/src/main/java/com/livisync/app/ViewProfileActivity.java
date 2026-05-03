@@ -81,24 +81,24 @@ public class ViewProfileActivity extends AppCompatActivity {
                     }
                 });
 
-        // Load preferences
         db.collection("preferences").document(theirUid)
                 .get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists()) {
-                        tvCity.setText("📍 " + doc.getString("city"));
-                        tvSleep.setText("😴 Sleep: " + doc.getString("sleepSchedule"));
-                        tvBudget.setText("💰 Budget: PKR " + doc.getLong("budgetMin") + " - " + doc.getLong("budgetMax"));
-                        tvCleanliness.setText("🧹 Cleanliness: " + doc.getLong("cleanliness") + "/5");
-                        tvSmoking.setText("🚬 Smoking: " + (Boolean.TRUE.equals(doc.getBoolean("smokingAllowed")) ? "Allowed" : "Not Allowed"));
-                        tvPets.setText("🐾 Pets: " + (Boolean.TRUE.equals(doc.getBoolean("petsAllowed")) ? "Allowed" : "Not Preferred"));
-                        tvGuests.setText("👥 Guests: " + (Boolean.TRUE.equals(doc.getBoolean("guestsAllowed")) ? "Allowed" : "Not Preferred"));
+                        tvCity.setText("Location: " + doc.getString("city"));
+                        tvSleep.setText("Sleep: " + doc.getString("sleepSchedule"));
+                        tvBudget.setText("Budget: PKR " + doc.getLong("budgetMin") + " - " + doc.getLong("budgetMax"));
+                        tvCleanliness.setText("Cleanliness: " + doc.getLong("cleanliness") + "/5");
+                        tvSmoking.setText("Smoking: " + (Boolean.TRUE.equals(doc.getBoolean("smokingAllowed")) ? "Allowed" : "Not Allowed"));
+                        tvPets.setText("Pets: " + (Boolean.TRUE.equals(doc.getBoolean("petsAllowed")) ? "Allowed" : "Not Preferred"));
+                        tvGuests.setText("Guests: " + (Boolean.TRUE.equals(doc.getBoolean("guestsAllowed")) ? "Allowed" : "Not Preferred"));
                     }
                 });
     }
 
     private void sendRequest() {
-        // Check if request already exists
+        btnSendRequest.setEnabled(false);
+        btnSendRequest.setBackgroundColor(getResources().getColor(R.color.grey));
         db.collection("matchRequests")
                 .whereEqualTo("fromUid", myUid)
                 .whereEqualTo("toUid", theirUid)
@@ -118,11 +118,12 @@ public class ViewProfileActivity extends AppCompatActivity {
                     db.collection("matchRequests").add(request)
                             .addOnSuccessListener(ref -> {
                                 Toast.makeText(this, "Match request sent!", Toast.LENGTH_SHORT).show();
-                                btnSendRequest.setEnabled(false);
                                 btnSendRequest.setText("Request Sent");
                             })
                             .addOnFailureListener(e -> {
                                 Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                btnSendRequest.setEnabled(true);
+                                btnSendRequest.setBackgroundColor(getResources().getColor(R.color.darkGrey));
                             });
                 });
     }

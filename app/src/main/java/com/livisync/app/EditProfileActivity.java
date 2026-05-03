@@ -31,9 +31,9 @@ public class EditProfileActivity extends AppCompatActivity {
     FirebaseFirestore db;
     String uid;
 
-    String[] genderOptions = {"Male", "Female", "Other"};
-    String[] sleepOptions = {"Early Bird", "Night Owl", "Flexible"};
-    String[] cleanOptions = {"1 - Very Relaxed", "2", "3 - Average", "4", "5 - Very Clean"};
+    String[] genderOptions = {"Male", "Female"};
+    String[] sleepOptions = {"Early Bird", "Late Night", "Night Owl", "Flexible"};
+    String[] cleanOptions = {"1 - Very Relaxed", "2 - Relaxed", "3 - Average", "4 - Clean", "5 - Very Clean"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +76,6 @@ public class EditProfileActivity extends AppCompatActivity {
     private void loadCurrentData() {
         if (uid == null) return;
 
-        // Load user data and prefill fields
         db.collection("users").document(uid)
                 .get()
                 .addOnSuccessListener(doc -> {
@@ -85,7 +84,6 @@ public class EditProfileActivity extends AppCompatActivity {
                         etAge.setText(doc.getString("age"));
                         etBio.setText(doc.getString("bio"));
 
-                        // Set gender spinner to current value
                         String gender = doc.getString("gender");
                         if (gender != null) {
                             for (int i = 0; i < genderOptions.length; i++) {
@@ -98,7 +96,6 @@ public class EditProfileActivity extends AppCompatActivity {
                     }
                 });
 
-        // Load preferences and prefill
         db.collection("preferences").document(uid)
                 .get()
                 .addOnSuccessListener(doc -> {
@@ -114,7 +111,6 @@ public class EditProfileActivity extends AppCompatActivity {
                         swPets.setChecked(Boolean.TRUE.equals(doc.getBoolean("petsAllowed")));
                         swGuests.setChecked(Boolean.TRUE.equals(doc.getBoolean("guestsAllowed")));
 
-                        // Set sleep spinner
                         String sleep = doc.getString("sleepSchedule");
                         if (sleep != null) {
                             for (int i = 0; i < sleepOptions.length; i++) {
@@ -125,7 +121,6 @@ public class EditProfileActivity extends AppCompatActivity {
                             }
                         }
 
-                        // Set cleanliness spinner
                         Long clean = doc.getLong("cleanliness");
                         if (clean != null) spCleanliness.setSelection((int)(clean - 1));
                     }
@@ -182,14 +177,12 @@ public class EditProfileActivity extends AppCompatActivity {
             return;
         }
 
-        // Save to users collection
         Map<String, Object> userUpdates = new HashMap<>();
         userUpdates.put("name", name);
         userUpdates.put("age", age);
         userUpdates.put("bio", bio);
         userUpdates.put("gender", spGender.getSelectedItem().toString());
 
-        // Save to preferences collection
         Map<String, Object> prefUpdates = new HashMap<>();
         prefUpdates.put("sleepSchedule", spSleep.getSelectedItem().toString());
         prefUpdates.put("cleanliness", spCleanliness.getSelectedItemPosition() + 1);
@@ -200,7 +193,6 @@ public class EditProfileActivity extends AppCompatActivity {
         prefUpdates.put("petsAllowed", swPets.isChecked());
         prefUpdates.put("guestsAllowed", swGuests.isChecked());
 
-        // Use an atomic upsert so missing documents are created instead of failing on update().
         WriteBatch batch = db.batch();
         batch.set(db.collection("users").document(uid), userUpdates, SetOptions.merge());
         batch.set(db.collection("preferences").document(uid), prefUpdates, SetOptions.merge());

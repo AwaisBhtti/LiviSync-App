@@ -47,7 +47,7 @@ public class LoginFragment extends Fragment {
                 etEmail.setError("Please enter a valid email");
                 return;
             }
-            if (inputPassword.length() < 8) {
+            if (inputPassword.length() < 6) {
                 etPassword.setError("Password must be at least 8 characters");
                 return;
             }

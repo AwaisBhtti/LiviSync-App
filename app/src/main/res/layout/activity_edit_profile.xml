@@ -163,19 +163,19 @@
                 <Spinner
                     android:id="@+id/spGender"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="25dp"
                     android:layout_marginTop="8dp" />
 
                 <Spinner
                     android:id="@+id/spSleep"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="25dp"
                     android:layout_marginTop="8dp" />
 
                 <Spinner
                     android:id="@+id/spCleanliness"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="25dp"
                     android:layout_marginTop="8dp" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial

@@ -76,19 +76,19 @@ public class HomeFragment extends Fragment {
     private void setupFilters() {
         ArrayAdapter<String> budgetAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item,
-                new String[]{"Any Budget", "Low", "Mid", "High"});
+                new String[]{"Budget", "Low", "Mid", "High"});
         budgetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spFilterBudget.setAdapter(budgetAdapter);
 
         ArrayAdapter<String> sleepAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item,
-                new String[]{"Any Sleep", "Early Bird", "Night Owl", "Flexible"});
+                new String[]{"Sleep", "Early Bird", "Late Night", "Night Owl", "Flexible"});
         sleepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spFilterSleep.setAdapter(sleepAdapter);
 
         ArrayAdapter<String> petsAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item,
-                new String[]{"Any Pets", "Allowed", "Not Allowed"});
+                new String[]{"Pets", "Allowed", "Not Allowed"});
         petsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spFilterPets.setAdapter(petsAdapter);
     }
