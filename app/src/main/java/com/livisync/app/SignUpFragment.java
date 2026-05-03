@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class SignUpFragment extends Fragment {
 
     private TextInputEditText etEmail, etPassword, etVerifyPassword;
+    private RadioGroup rgRole;
     private Button btnSignUp;
     FirebaseAuth mAuth;
     FirebaseFirestore db;
@@ -38,6 +40,7 @@ public class SignUpFragment extends Fragment {
         etEmail = view.findViewById(R.id.etEmail2);
         etPassword = view.findViewById(R.id.etPassword2);
         etVerifyPassword = view.findViewById(R.id.etVerifyPassword);
+        rgRole = view.findViewById(R.id.rgRole);
         btnSignUp = view.findViewById(R.id.btnSignUp);
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -46,6 +49,12 @@ public class SignUpFragment extends Fragment {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
             String verifyPassword = etVerifyPassword.getText().toString().trim();
+            
+            String role = "user";
+            if (rgRole.getCheckedRadioButtonId() == R.id.rbAdmin) {
+                role = "admin";
+            }
+
             if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 etEmail.setError("Please enter a valid email");
                 return;
@@ -58,23 +67,30 @@ public class SignUpFragment extends Fragment {
                 etVerifyPassword.setError("Passwords do not match");
                 return;
             }
+            
+            btnSignUp.setEnabled(false);
             btnSignUp.setBackgroundColor(getResources().getColor(R.color.grey));
+            
+            final String selectedRole = role;
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
-                        saveUserToFirestore(uid, email);
+                        saveUserToFirestore(uid, email, selectedRole);
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        btnSignUp.setEnabled(true);
                         btnSignUp.setBackgroundColor(getResources().getColor(R.color.darkGrey));
                     });
         });
     }
-    private void saveUserToFirestore(String uid, String email) {
+
+    private void saveUserToFirestore(String uid, String email, String role) {
         Map<String, Object> user = new HashMap<>();
         user.put("uid", uid);
         user.put("name", "");
         user.put("email", email);
+        user.put("role", role);
         user.put("age", "");
         user.put("bio", "");
         user.put("gender", "");
@@ -87,6 +103,9 @@ public class SignUpFragment extends Fragment {
                     etEmail.setText("");
                     etPassword.setText("");
                     etVerifyPassword.setText("");
+                    btnSignUp.setEnabled(true);
+                    btnSignUp.setBackgroundColor(getResources().getColor(R.color.darkGrey));
+                    
                     ViewPager2 viewPager = requireActivity().findViewById(R.id.viewPager);
                     if (viewPager != null) {
                         viewPager.setCurrentItem(0, true);
@@ -94,6 +113,8 @@ public class SignUpFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed to save profile: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    btnSignUp.setEnabled(true);
+                    btnSignUp.setBackgroundColor(getResources().getColor(R.color.darkGrey));
                 });
     }
 }
