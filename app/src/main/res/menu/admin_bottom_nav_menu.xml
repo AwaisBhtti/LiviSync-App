@@ -3,15 +3,15 @@
     <item
         android:id="@+id/admin_users"
         android:title="Users"
-        android:icon="@drawable/profile"/>
+        android:icon="@drawable/users"/>
     <item
         android:id="@+id/admin_matches"
         android:title="Matches"
-        android:icon="@drawable/home"/>
+        android:icon="@drawable/match"/>
     <item
         android:id="@+id/admin_reports"
         android:title="Reports"
-        android:icon="@drawable/noti"/>
+        android:icon="@drawable/report"/>
     <item
         android:id="@+id/admin_profile"
         android:title="Profile"
